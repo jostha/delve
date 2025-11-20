@@ -1,12 +1,18 @@
 ;       Delve
 ;       John Halfpenny 2025     
 
+; Build with 
+;       acme --cpu 6502 -f cbm -o outfile.prg infile.asm
+
 * = $1001
 
 ; BASIC program to boot the machine language code
         !byte    $0b, $10, $0a, $00, $9e, $34, $31, $30, $39, $00, $00, $00
 
-; dungeon data
+
+; 
+;       dungeon data
+;
 
 * = $2000
 
