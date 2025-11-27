@@ -9,12 +9,185 @@
 ; BASIC program to boot the machine language code
         !byte    $0b, $10, $0a, $00, $9e, $34, $31, $30, $39, $00, $00, $00
 
+; Colour codes
+black           = $00
+white           = $01
+red             = $02
+cyan            = $03
+purple          = $04
+green           = $05
+blue            = $06
+yellow          = $07
+orange          = $08
+light_orange    = $09
+light_red       = $0A
+light_cyan      = $0B
+light_purple    = $0C
+light_green     = $0D
+light_bluegreen = $0E
+light_yellow    = $0F
 
+; Some startup values
+hero_map_x      = 1
+hero_map_y      = 4
+hero_screen_x   = 11
+hero_screen_y   = 12
+map_width       = 32
+screen_width    = 22
+
+; -------------------------------------------------
+; Zero-page scratch
+; -------------------------------------------------
+;tmp     = $f9        ; 1-byte scratch
+;map_off = $fa        ; 1-byte scratch for dungeon offset
+;scr_off = $fb        ; 1-byte scratch for screen offset
+;screen_ptr = $fc
+;colour_ptr = $fe
+
+mask            = $f6    ; scratch byte for bit mask
+screen_ptr      = $fb    ; 2 bytes: $fb/$fc → base address for screen RAM
+colour_ptr      = $fd    ; 2 bytes: $fd/$fe → base address for colour RAM
+scr_row         = $f7    ; 1 byte scratch: screen row
+scr_col         = $f8    ; 1 byte scratch: screen column
+tmp             = $f9    ; 1 byte scratch: general temporary
+
+; Addresses
+SCREEN_BASE     = $1e00
+COLOR_BASE      = $9600
+
+init
+        jsr     $e55f                   ; cls and home cursor
+        ldx     #$08
+        stx     $900f                   ; borders to black
+
+        ; set screen and colour base pointers
+        lda     #<SCREEN_BASE
+        sta     screen_ptr
+        lda     #>SCREEN_BASE
+        sta     screen_ptr+1
+
+        lda     #<COLOR_BASE
+        sta     colour_ptr
+        lda     #>COLOR_BASE
+        sta     colour_ptr+1
+
+update_screen
+
+draw_hero
+        lda     #81                     ; ball shape
+        sta     SCREEN_BASE + (hero_screen_y * screen_width + hero_screen_x)
+        lda     #cyan
+        sta     COLOR_BASE + (hero_screen_y * screen_width + hero_screen_x)
+
+draw_surround_1_deep
+
+        ; NW
+        ldy #hero_map_y-1
+        ldx #hero_map_x-1
+        lda #hero_screen_y-1
+        sta scr_row
+        lda #hero_screen_x-1
+        sta scr_col
+        jsr check_and_draw
+
+        ; N
+        ldy #hero_map_y-1
+        ldx #hero_map_x
+        lda #hero_screen_y-1
+        sta scr_row
+        lda #hero_screen_x
+        sta scr_col
+        jsr check_and_draw
+
+        ; NE
+        ldy #hero_map_y-1
+        ldx #hero_map_x+1
+        lda #hero_screen_y-1
+        sta scr_row
+        lda #hero_screen_x+1
+        sta scr_col
+        jsr check_and_draw
+
+        rts
+
+; -------------------------------------------------
+; Subroutine: check_and_draw
+; Inputs:
+;   Y = map_row
+;   X = map_col
+;   scr_row/$f7 and scr_col/$f8 are set by caller
+; -------------------------------------------------
+check_and_draw
+; --- compute byte index = row*4 + (col >> 3) ---
+tya
+asl
+asl
+sta tmp              ; tmp = row*4
+
+txa
+pha                  ; save col
+lsr
+lsr
+lsr                  ; col >> 3
+clc
+adc tmp
+tax                  ; X = byte index
+
+; --- compute mask = $80 >> (col & 7) ---
+pla
+and #$07             ; keep low 3 bits
+tay                  ; Y = bit index
+lda #$80
+shift_mask:
+dey
+bmi mask_done
+lsr
+bpl shift_mask
+mask_done:
+sta mask             ; save mask
+
+; --- test bit ---
+lda dungeon,x
+and mask
+beq skip_draw
+
+
+        ; --- compute screen offset = scr_row*22 + scr_col ---
+        lda scr_row
+        asl
+        asl
+        sta tmp          ; row*4
+
+        lda scr_row
+        clc
+        adc tmp          ; row*5
+        asl              ; ×10
+        sta tmp
+
+        lda scr_row
+        clc
+        adc tmp          ; row*11
+        asl              ; ×22
+        sta tmp          ; row*22
+
+        lda tmp          ; row*22
+        clc
+        adc scr_col      ; + column
+        tay              ; final screen offset in Y
+
+        ; --- draw fuzzy wall ---
+        lda #102
+        sta (screen_ptr),y
+        lda #yellow
+        sta (colour_ptr),y
+
+skip_draw:
+        rts
 ; 
 ;       dungeon data
 ;
 
-* = $1100
+; * = $1100
 
 ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -50,7 +223,7 @@
 ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
-level_1                 !byte %11111111
+dungeon                 !byte %11111111
                         !byte %11111111
                         !byte %11111111
                         !byte %11111111
