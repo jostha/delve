@@ -1,0 +1,8 @@
+0  Floor
+1  Wall
+2  Locked door (changes to 3 with a key)
+3  Unlocked door 
+4  Water (Acts like Wall)
+5  Lava  (Health - 1)
+
+15 Key (changes to 0 once touched, keys + 1)
