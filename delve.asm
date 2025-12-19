@@ -9,13 +9,10 @@
 
 !byte    $0b, $10, $0a, $00, $9e, $34, $31, $30, $39, $00, $00, $00
 
-    lda    #$93
-    jsr    $FFD2    ; cls
-
-    ldx   #$08
-    stx   $900f    ; borders to black
     jmp   init
 
+
+;------------------------------------------------
 ;
 ; Zero page vars
 ;
@@ -30,6 +27,7 @@ row_lo = $fb
 row_hi = $fc
 
 
+;------------------------------------------------
 ;
 ; Buffers
 ;
@@ -37,6 +35,7 @@ row_hi = $fc
 tile_char !byte 0,0
 
 
+;------------------------------------------------
 ;
 ; MACROS
 ;
@@ -87,16 +86,24 @@ tile_char !byte 0,0
     ; Compute row pointer = dungeon + (y << 4)
     ;---------------------------------------
     ldy    target_y
-    tya
-    asl
-    asl
-    asl
-    asl
-    clc
-    adc    #<dungeon
+;    Saving below in case lookup table uses too much RAM
+;    tya
+;    asl
+;    asl
+;    asl
+;    asl
+;    clc
+;    adc    #<dungeon
+;    sta    row_lo
+;    lda    #>dungeon
+;    adc    #0
+;    sta    row_hi
+
+    ; This section is lookup table code, can be removed if above
+    ; used instead
+    lda    row_table_lo,y    ; low byte from table
     sta    row_lo
-    lda    #>dungeon
-    adc    #0
+    lda    row_table_hi,y    ; high byte from table
     sta    row_hi
 
     ;---------------------------------------
@@ -147,17 +154,39 @@ tile_char !byte 0,0
 }
 
 
+;------------------------------------------------
 ;
 ; DATA
 ;
 !source         "dungeonmap.asm"
 
+; Generate lookup tables to save on the fly computation
+; Will revert if I run out of RAM for this, so will leave
+; the ASL code in the tile routine
 
+row_table_lo
+!for i, 0, 31 {
+    !byte <(dungeon + (i * 16))
+}
+
+row_table_hi
+!for i, 0, 31 {
+    !byte >(dungeon + (i * 16))
+}
+
+
+;------------------------------------------------
 ;
 ; CODE ENTRY
 ;
 
 init
+
+    lda    #$93
+    jsr    $FFD2    ; cls
+
+    ldx   #$08
+    stx   $900f    ; borders to black
 
     lda    #7
     sta    player_x
