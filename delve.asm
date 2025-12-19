@@ -17,25 +17,17 @@
     jmp   init
 
 ;
-; Zero page
-;
-;TBD
-
-
-;
-; Vars
+; Zero page vars
 ;
 
-player_x = 4
-player_y = 16
+player_x  = $10
+player_y  = $11
+target_x  = $12
+target_y  = $13
+tile_value = $14
 
-row_lo   = 0
-row_hi   = 0
-
-target_x = 0
-target_y = 0
-
-tile_value = 0
+row_lo = $fb
+row_hi = $fc
 
 
 ;
@@ -55,32 +47,20 @@ tile_char !byte 0,0
     jsr    $ffd2           ; set text colour
 
     ; Set cursor position to x and y
-    ; This is wacky...
 
-    ; Row first...
-    lda    #y
-    sta    $D6     ; cursor row
+    ldx    #y         ; row in x - yes really
+    ldy    #xx        ; column in y wtf
+    clc
+    jsr    $fff0
 
-    ; ...call plot routine to update internal machinations...
-    jsr     $FFF0  ; Vic 20 plot routine (erases $D3)
-
-    ; ...set column as plot routine erases it
-    lda    #xx
-    sta    $D3     ; cursor column
-
-	ldx	#00
-    jsr	   .print_start
-    jmp    .print_end
+	ldx	   #00
 
 .print_loop
+    lda    text,x
+    beq    .print_end
     jsr    $ffd2
     inx
-
-.print_start
-    lda    text,x
-    cpx    #$05
     bne    .print_loop ; loops until byte 0 encountered
-    rts
 
 .print_end
 }
@@ -131,14 +111,14 @@ tile_char !byte 0,0
     ;---------------------------------------
     lda    target_x
     and    #1
-    beq    .get_high
+    beq    .draw_tile_get_high
 
-.get_low
+.draw_tile_get_low
     lda    (row_lo),y
     and    #$0f
-    jmp    .got_tile
+    jmp    .draw_tile_got_tile
 
-.get_high
+.draw_tile_get_high
     lda    (row_lo),y
     lsr
     lsr
@@ -146,7 +126,7 @@ tile_char !byte 0,0
     lsr
     and    #$0f
 
-.got_tile
+.draw_tile_got_tile
     sta    tile_value
 
     ;---------------------------------------
@@ -178,6 +158,11 @@ tile_char !byte 0,0
 ;
 
 init
+
+    lda    #7
+    sta    player_x
+    lda    #8
+    sta    player_y
 
 +draw_tile -1, -1, 10, 5   ; NW
 +draw_tile  0, -1, 11, 5   ; N
