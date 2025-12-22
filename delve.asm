@@ -9,7 +9,7 @@
 ;    ░       ░  ░    ░  ░   ░     ░  ░
 ;  ░                       ░
 ;       for the unexpanded Vic20
-;              by  wroob
+;               by johhn
 
 * = $1001
 
@@ -161,6 +161,7 @@ row_table_hi:
 ;------------------------------------------------
 ; SUBROUTINES
 
+; KEYS
 read_keys:
     jsr $ffe4           ; GETIN - returns key in A
     beq .done           ; If 0, no key pressed
@@ -200,10 +201,7 @@ read_keys:
     jsr key_right_handler
     rts
 
-; --- Movement Subroutines ---
-; We move the macro calls here. Since these are called via JSR,
-; they can be anywhere in your code!
-
+; MOVEMENT
 key_up_handler:
     +draw_tile 0, -1, 255, 255
     lda tile_value
@@ -278,5 +276,3 @@ game_loop:
     jsr read_keys
     jsr draw_dungeon
     jmp game_loop
-
-
