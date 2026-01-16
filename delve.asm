@@ -11,6 +11,7 @@
 ;       for the unexpanded Vic20
 ;               by johhn
 
+
 * = $1001
 
 ; -----------------------------------------------
@@ -18,17 +19,26 @@
 
 !byte    $0b, $10, $0a, $00, $9e, $34, $31, $30, $39, $00, $00, $00
 
-    jmp   init
+    jmp init
+
+;------------------------------------------------
+; STATIC DATA - Keep in low RAM area
+
+!source "dungeonmap.asm"
 
 
 ;------------------------------------------------
 ; Zero page vars
+; Stick to $00 to $0F or $45 to $50 range for safety
+player_x     = $02
+player_y     = $03
+target_x     = $04
+target_y     = $05
+tile_value   = $06
+tile_char    = $07
 
-player_x  = $10
-player_y  = $11
-target_x  = $12
-target_y  = $13
-tile_value = $14
+temp_colour     = $08        
+temp_colour_hi  = $09        
 
 row_lo = $fb
 row_hi = $fc
@@ -37,115 +47,72 @@ row_hi = $fc
 ;------------------------------------------------
 ; Buffers
 
-tile_char !byte 0,0
+;tile_char !byte 0,0
 
 
 ;------------------------------------------------
-; MACROS
+; MACROS - to be replaced
 
-!macro print text, colour, xx, y {
-    lda #colour
-    jsr $ffd2           ; set text colour
-
-    ; Set cursor position to x and y
-
-    ldx #y         ; row in x - yes really
-    ldy #xx        ; column in y wtf
-    clc
-    jsr $fff0
-
-	ldx	#00
-
-.print_loop
-    lda text,x
-    beq .print_end
-    jsr $ffd2
-    inx
-    bne .print_loop ; loops until byte 0 encountered
-
-.print_end
-}
-
-
-!macro draw_tile dx, dy, scrx, scry {
-    ; Specify scrx of > 30 to skip printing result if you just
-    ; want to check the target tile is passable
-
-    ; Compute target_x = player_x + dx
+!macro draw_tile dx, dy, scrx, scry, tile_colour {
+    ; 1. Calculate Map Coordinates
     lda player_x
     clc
     adc #dx
     sta target_x
-
-    ; Compute target_y = player_y + dy
     lda player_y
     clc
     adc #dy
     sta target_y
 
-    ; lookup table code
+    ; 2. Lookup Map Data (using your existing map table logic)
     ldy target_y
-    lda row_table_lo,y    ; low byte from table
+    lda row_table_lo, y
     sta row_lo
-    lda row_table_hi,y    ; high byte from table
+    lda row_table_hi, y
     sta row_hi
 
-    ; Compute byte index = x >> 1
     lda target_x
     lsr
-    tay
-
-    ; Extract nibble
+    tay                  ; Y is index into map byte (x/2)
     lda target_x
     and #1
-    beq .draw_tile_get_high
+    beq .get_high
 
-.draw_tile_get_low
-    lda (row_lo),y
+    lda (row_lo), y      ; Get low nibble
     and #$0f
-    jmp .draw_tile_got_tile
-
-.draw_tile_get_high
-    lda (row_lo),y
+    jmp .got_tile
+.get_high:
+    lda (row_lo), y      ; Get high nibble
     lsr
     lsr
     lsr
     lsr
-    and #$0f
-
-.draw_tile_got_tile
+.got_tile:
     sta tile_value
-
-    ; Convert tile_value → PETSCII
-    lda tile_value
     clc
-    adc #$30        ; '0'..'9'
-    sta tile_char
+    adc #$30             ; Convert 0-9 to PETSCII '0'-'9'
+    sta tile_char        ; We only need the first byte now
 
-    lda #0
-    sta tile_char+1  ; terminator
+    ; 3. Prepare for Subroutine
+    ; If scrx > 30, we just wanted the tile_value, so skip printing
+    ldx #scrx
+    cpx #31
+    bcs .skip_print
 
-    ; Only print using existing macro if scrx < 30
-    ; otherwise presume we are reusing this macro just to determine
-    ; the target tile to see if it's passable or not
-    lda #scrx
-    cmp #31
-    bcs .draw_tile_skip_print
-    +print tile_char, 1, scrx, scry
+    lda #tile_colour
+    sta temp_colour
+    
+    lda tile_char        ; Restore character to A
+    ldx #scry            ; X = Row
+    ldy #scrx            ; Y = Column
+    jsr fast_print
 
-.draw_tile_skip_print
+.skip_print:
 }
-
-
-;------------------------------------------------
-; DATA
-
-!source         "dungeonmap.asm"
 
 ; ------------------------------------------
 ; Generate lookup tables to save on the fly computation
-; Will revert if I run out of RAM for this, so will leave
-; the ASL code in the tile routine
+; Will revert to on the fly if I run out of RAM for this
 
 row_table_lo:
 !for i, 0, 31 {
@@ -157,11 +124,52 @@ row_table_hi:
     !byte >(dungeon + (i * 16))
 }
 
+; Screen RAM starts at $1000 for unexpanded VIC-20
+; Each row is 22 characters wide
+screen_lo:
+!for i, 0, 22 {
+    !byte <($1e00 + (i * 22))
+}
+
+screen_hi:
+!for i, 0, 22 {
+    !byte >($1e00 + (i * 22))
+}
 
 ;------------------------------------------------
 ; SUBROUTINES
 
-; KEYS
+fast_print:
+    ; Prints direct to screen without using kernal routine
+    ;   A = Character (PETSCII)
+    ;   X = Screen Row (0-22)
+    ;   Y = Screen Column (0-21)
+    ;   temp_colour = Hardware Color (0-7)
+
+    pha                  ; [1] Save character to stack
+
+    lda screen_lo, x     ; Get row address from lookup table
+    sta row_lo           ; row_lo/hi MUST be safe ZP (e.g., $FB/$FC)
+    lda screen_hi, x
+    sta row_hi           ; row_lo/hi now points to SCREEN RAM ($1E00)
+
+    pla                  ; [2] Restore character from stack
+    sta (row_lo), y      ; Write character to the screen
+
+    ; --- Switch pointer to Colour RAM ---
+    lda row_hi
+    clc
+    adc #$78             ; $1E (Screen) + $78 = $96 (Color RAM)
+    sta row_hi           ; row_lo/hi now points to COLOR RAM ($9600)
+
+    lda temp_colour
+    and #$07             ; [3] CRITICAL: Keep only bits 0-2 (Colors 0-7)
+                         ; This prevents bit 3 (Multicolor) from being set
+    sta (row_lo), y      ; Write color to Color RAM
+    
+    rts
+
+
 read_keys:
     jsr $ffe4           ; GETIN - returns key in A
     beq .done           ; If 0, no key pressed
@@ -203,7 +211,7 @@ read_keys:
 
 ; MOVEMENT
 key_up_handler:
-    +draw_tile 0, -1, 255, 255
+    +draw_tile 0, -1, 255, 255, 0
     lda tile_value
     cmp #11
     bcs .blocked_up
@@ -212,7 +220,7 @@ key_up_handler:
     rts
 
 key_down_handler:
-    +draw_tile 0, 1, 255, 255
+    +draw_tile 0, 1, 255, 255, 0
     lda tile_value
     cmp #11
     bcs .blocked_down
@@ -221,7 +229,7 @@ key_down_handler:
     rts
 
 key_left_handler:
-    +draw_tile -1, 0, 255, 255
+    +draw_tile -1, 0, 255, 255, 0
     lda tile_value
     cmp #11
     bcs .blocked_left
@@ -230,7 +238,7 @@ key_left_handler:
     rts
 
 key_right_handler:
-    +draw_tile 1, 0, 255, 255
+    +draw_tile 1, 0, 255, 255, 0
     lda tile_value
     cmp #11
     bcs .blocked_right
@@ -239,14 +247,43 @@ key_right_handler:
     rts
 
 draw_dungeon:
-    +draw_tile -1, -1, 10, 11  ; NW
-    +draw_tile  0, -1, 11, 11  ; N
-    +draw_tile  1, -1, 12, 11  ; NE
-    +draw_tile -1,  0, 10, 12  ; W
-    +draw_tile  1,  0, 12, 12  ; E
-    +draw_tile -1,  1, 10, 13  ; SW
-    +draw_tile  0,  1, 11, 13  ; S
-    +draw_tile  1,  1, 12, 13  ; SE
+   ; 5x5 core grid
+    +draw_tile -2, -2,  9, 10, 7  ; row 1
+    +draw_tile -1, -2, 10, 10, 7
+    +draw_tile  0, -2, 11, 10, 7
+    +draw_tile  1, -2, 12, 10, 7
+    +draw_tile  2, -2, 13, 10, 7
+
+    +draw_tile -2, -1,  9, 11, 2  ; row 2
+    +draw_tile -1, -1, 10, 11, 4
+    +draw_tile  0, -1, 11, 11, 4
+    +draw_tile  1, -1, 12, 11, 4
+    +draw_tile  2, -1, 13, 11, 2
+
+    +draw_tile -2,  0,  9, 12, 3  ; row 3 (player row)
+    +draw_tile -1,  0, 10, 12, 4
+    ; player at 11, 12
+    +draw_tile  1,  0, 12, 12, 4
+    +draw_tile  2,  0, 13, 12, 3 
+
+    +draw_tile -2,  1,  9, 13, 5  ; row 4
+    +draw_tile -1,  1, 10, 13, 4
+    +draw_tile  0,  1, 11, 13, 4
+    +draw_tile  1,  1, 12, 13, 4
+    +draw_tile  2,  1, 13, 13, 5
+
+    +draw_tile -2,  2,  9, 14, 7  ; row 5
+    +draw_tile -1,  2, 10, 14, 7
+    +draw_tile  0,  2, 11, 14, 7
+    +draw_tile  1,  2, 12, 14, 7
+    +draw_tile  2,  2, 13, 14, 7
+
+    ; Test compass one at a time - comment out the crashing ones
+    ;+draw_tile  0, -3, 11,  9, 5  ; North
+    ;+draw_tile  0,  3, 11, 15, 5  ; South (works)
+    ;+draw_tile -3,  0,  8, 12, 5  ; West
+    ;+draw_tile  3,  0, 14, 12, 5  ; East
+
     rts
 
 
@@ -276,3 +313,14 @@ game_loop:
     jsr read_keys
     jsr draw_dungeon
     jmp game_loop
+
+
+
+;Black	144	$90	CTRL + 1
+;White	5	$05	CTRL + 2
+;Red	28	$1C	CTRL + 3
+;Cyan	159	$9F	CTRL + 4
+;Purple	156	$9C	CTRL + 5
+;Green	30	$1E	CTRL + 6
+;Blue	31	$1F	CTRL + 7
+;Yellow	158	$9E	CTRL + 8

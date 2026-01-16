@@ -35,6 +35,8 @@
 ; XX    X     XX  XXX   XXXXXXXXXX
 ; XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+; dungeon is 32x32  (16/32)
+
 dungeon             !byte $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB
                     !byte $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB
                     !byte $BB, $B0, $0B, $00,  $0B, $BB, $BB, $B0,  $0B, $00, $BB, $BB,  $BB, $BB, $BB, $BB
