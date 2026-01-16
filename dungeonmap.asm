@@ -37,39 +37,39 @@
 
 ; dungeon is 32x32  (16/32)
 
-dungeon             !byte $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB
-                    !byte $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB
-                    !byte $BB, $B0, $0B, $00,  $0B, $BB, $BB, $B0,  $0B, $00, $BB, $BB,  $BB, $BB, $BB, $BB
-                    !byte $BB, $BB, $B3, $00,  $0B, $00, $BB, $BB,  $0B, $0B, $00, $00,  $00, $BB, $BB, $BB
-                    !byte $BB, $B0, $0B, $B3,  $BB, $0B, $00, $0B,  $0B, $00, $0B, $00,  $B0, $BB, $0B, $BB
-                    !byte $BB, $00, $03, $00,  $0B, $0B, $0B, $00,  $00, $0B, $B0, $B0,  $00, $BB, $3B, $BB
-                    !byte $BB, $B0, $0B, $00,  $0B, $0B, $00, $B0,  $BB, $00, $00, $B0,  $BB, $00, $0B, $BB
-                    !byte $BB, $BB, $BB, $00,  $BB, $0B, $BB, $00,  $00, $0B, $0B, $00,  $0B, $0B, $0B, $BB
+dungeon             !byte $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC
+                    !byte $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC
+                    !byte $CC, $C0, $0C, $00,  $0C, $CC, $CC, $C0,  $0C, $00, $CC, $CC,  $CC, $CC, $CC, $CC
+                    !byte $CC, $CC, $C3, $00,  $0C, $00, $CC, $CC,  $0C, $0C, $00, $00,  $00, $CC, $CC, $CC
+                    !byte $CC, $C0, $0C, $C3,  $CC, $0C, $00, $0C,  $0C, $00, $0C, $00,  $C0, $CC, $0C, $CC
+                    !byte $CC, $00, $03, $00,  $0C, $0C, $0C, $00,  $00, $0C, $C0, $C0,  $00, $CC, $3C, $CC
+                    !byte $CC, $C0, $0C, $00,  $0C, $0C, $00, $C0,  $CC, $00, $00, $C0,  $CC, $00, $0C, $CC
+                    !byte $CC, $CC, $CC, $00,  $CC, $0C, $CC, $00,  $00, $0C, $0C, $00,  $0C, $0C, $0C, $CC
 
-                    !byte $BB, $B0, $BB, $BB,  $BB, $0B, $00, $0B,  $0B, $0B, $00, $0B,  $00, $0B, $0B, $BB
-                    !byte $BB, $3B, $B0, $0B,  $BB, $0B, $0B, $B0,  $00, $0B, $BB, $00,  $0B, $B0, $0B, $BB
-                    !byte $B0, $00, $30, $0B,  $BB, $0B, $00, $00,  $BB, $B0, $00, $B0,  $BB, $BB, $0B, $BB
-                    !byte $B0, $00, $B0, $0B,  $00, $00, $0B, $00,  $00, $B0, $00, $BB,  $00, $00, $0B, $BB
-                    !byte $BB, $0B, $BB, $BB,  $00, $B0, $BB, $0B,  $B0, $BB, $3B, $00,  $0B, $BB, $BB, $BB
-                    !byte $BB, $00, $30, $03,  $0B, $00, $0B, $00,  $00, $0B, $0B, $00,  $0B, $03, $00, $BB
-                    !byte $BB, $BB, $B0, $BB,  $BB, $0B, $00, $0B,  $0B, $0B, $0B, $00,  $BB, $0B, $00, $BB
-                    !byte $BB, $B0, $0B, $03,  $0B, $00, $0B, $00,  $0B, $0B, $0B, $BB,  $00, $0B, $3B, $BB
+                    !byte $CC, $C0, $CC, $CC,  $CC, $0C, $00, $0C,  $0C, $0C, $00, $0C,  $00, $0C, $0C, $CC
+                    !byte $CC, $3C, $C0, $0C,  $CC, $0C, $0C, $C0,  $00, $0C, $CC, $00,  $0C, $C0, $0C, $CC
+                    !byte $C0, $00, $30, $0C,  $CC, $0C, $00, $00,  $CC, $C0, $00, $C0,  $CC, $CC, $0C, $CC
+                    !byte $C0, $00, $C0, $0C,  $00, $00, $0C, $00,  $00, $C0, $00, $CC,  $00, $00, $0C, $CC
+                    !byte $CC, $0C, $CC, $CC,  $00, $C0, $CC, $0C,  $C0, $CC, $3C, $00,  $0C, $CC, $CC, $CC
+                    !byte $CC, $00, $30, $03,  $0C, $00, $0C, $00,  $00, $0C, $0C, $00,  $0C, $03, $00, $CC
+                    !byte $CC, $CC, $C0, $CC,  $CC, $0C, $00, $0C,  $0C, $0C, $0C, $00,  $CC, $0C, $00, $CC
+                    !byte $CC, $C0, $0C, $03,  $0C, $00, $0C, $00,  $0C, $0C, $0C, $CC,  $00, $0C, $3C, $CC
 
-                    !byte $BB, $B0, $00, $0B,  $00, $BB, $BB, $BB,  $B0, $00, $0B, $03,  $00, $0B, $00, $BB
-                    !byte $BB, $BB, $BB, $BB,  $00, $B0, $00, $00,  $00, $BB, $BB, $0B,  $00, $0B, $00, $BB
-                    !byte $BB, $BB, $0B, $03,  $00, $B0, $BB, $BB,  $BB, $B0, $30, $0B,  $BB, $BB, $BB, $BB
-                    !byte $BB, $BB, $3B, $0B,  $00, $B0, $B0, $00,  $BB, $B0, $B3, $B0,  $00, $00, $BB, $BB
-                    !byte $BB, $B0, $03, $0B,  $BB, $B0, $B0, $00,  $00, $00, $B0, $B0,  $B0, $B0, $BB, $BB
-                    !byte $B0, $30, $0B, $BB,  $B0, $30, $B0, $00,  $BB, $B3, $B0, $B0,  $00, $00, $BB, $BB
-                    !byte $BB, $B0, $03, $0B,  $BB, $B0, $BB, $0B,  $BB, $B0, $BB, $BB,  $0B, $0B, $BB, $BB
-                    !byte $BB, $B0, $0B, $BB,  $B0, $00, $0B, $00,  $0B, $00, $03, $00,  $0B, $0B, $BB, $BB
+                    !byte $CC, $C0, $00, $0C,  $00, $CC, $CC, $CC,  $C0, $00, $0C, $03,  $00, $0C, $00, $CC
+                    !byte $CC, $CC, $CC, $CC,  $00, $C0, $00, $00,  $00, $CC, $CC, $0C,  $00, $0C, $00, $CC
+                    !byte $CC, $CC, $0C, $03,  $00, $C0, $CC, $CC,  $CC, $C0, $30, $0C,  $CC, $CC, $CC, $CC
+                    !byte $CC, $CC, $3C, $0C,  $00, $C0, $C0, $00,  $CC, $C0, $C3, $C0,  $00, $00, $CC, $CC
+                    !byte $CC, $C0, $03, $0C,  $CC, $C0, $C0, $00,  $00, $00, $C0, $C0,  $C0, $C0, $CC, $CC
+                    !byte $C0, $30, $0C, $CC,  $C0, $30, $C0, $06,  $CC, $C3, $C0, $C0,  $00, $00, $CC, $CC
+                    !byte $CC, $C0, $03, $0C,  $CC, $C0, $CC, $0C,  $CC, $C0, $CC, $CC,  $0C, $0C, $CC, $CC
+                    !byte $CC, $C0, $0C, $CC,  $C0, $00, $0C, $00,  $0C, $00, $03, $00,  $0C, $0C, $CC, $CC
 
-                    !byte $B0, $30, $03, $0B,  $00, $BB, $BB, $BB,  $0B, $B0, $BB, $0B,  $B0, $0B, $BB, $BB
-                    !byte $BB, $B3, $BB, $BB,  $B0, $B0, $00, $00,  $00, $B3, $BB, $BB,  $BB, $BB, $00, $0B
-                    !byte $BB, $B0, $BB, $BB,  $00, $B0, $B0, $BB,  $BB, $B0, $BB, $00,  $00, $0B, $00, $0B
-                    !byte $BB, $BB, $0B, $BB,  $0B, $B0, $00, $B0,  $00, $00, $00, $0B,  $00, $0B, $BB, $0B
-                    !byte $B0, $00, $00, $0B,  $00, $00, $BB, $B0,  $BB, $B0, $BB, $0B,  $0B, $00, $00, $0B
-                    !byte $BB, $B0, $00, $BB,  $BB, $B0, $BB, $00,  $BB, $B0, $BB, $00,  $00, $0B, $BB, $BB
-                    !byte $BB, $00, $00, $B0,  $30, $00, $BB, $00,  $BB, $B0, $00, $BB,  $BB, $BB, $BB, $BB
-                    !byte $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB,  $BB, $BB, $BB, $BB
+                    !byte $C0, $30, $03, $0C,  $00, $CC, $CC, $CC,  $0C, $C0, $CC, $0C,  $C0, $0C, $CC, $CC
+                    !byte $CC, $C3, $CC, $CC,  $C0, $C0, $00, $00,  $00, $C3, $CC, $CC,  $CC, $CC, $00, $0C
+                    !byte $CC, $C0, $CC, $CC,  $00, $C0, $C0, $CC,  $CC, $C0, $CC, $00,  $00, $0C, $00, $0C
+                    !byte $CC, $CC, $0C, $CC,  $0C, $C0, $00, $C0,  $00, $00, $00, $0C,  $00, $0C, $CC, $0C
+                    !byte $C0, $00, $00, $0C,  $00, $00, $CC, $C0,  $CC, $C0, $CC, $0C,  $0C, $00, $00, $0C
+                    !byte $CC, $C0, $00, $CC,  $CC, $C0, $CC, $00,  $CC, $C0, $CC, $00,  $00, $0C, $CC, $CC
+                    !byte $CC, $00, $00, $C0,  $30, $00, $CC, $00,  $CC, $C0, $00, $CC,  $CC, $CC, $CC, $CC
+                    !byte $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC,  $CC, $CC, $CC, $CC
 

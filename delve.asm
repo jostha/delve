@@ -148,19 +148,38 @@ tile_to_char:
     !byte 59   ;door unlocked
     !byte 00   ;shallow water
     !byte 00   ;hidden passage
-    !byte 54   ;fountain (health +1)
+    !byte 54   ;active fountain (health +1)
+    !byte 54   ;inactive fountain
     !byte 00   ;teleportation (goes somewhere random)
     !byte 00   ;key (changes to 0 once touched, keys + 1)
     !byte 00   ;Petr / Petra (randomly chosen) - game won if touched
-    !byte 00   ;Time spell (adds 20 seconds to time)
+    !byte 00   ;time spell (adds 20 seconds to time)
     !byte 61   ;wall
     !byte 60   ;locked Door (Changes to 3 if touched with a key)
     !byte 00   ;deep water
     !byte 00   ;monster
-    !byte 00   ;blank
 
 ;------------------------------------------------
 ; SUBROUTINES
+
+sound_footstep:
+   ldx #$fe      ; Starting "pitch" for noise (high-ish)
+.loop:
+    stx $900d     ; Write to noise channel
+
+    ; Inner delay loop
+    ldy #$10
+.wait:
+    dey
+    bne .wait
+
+    dex           ; Decrease pitch slightly
+    cpx #$f0      ; Stop when we hit a lower tone
+    bne .loop
+
+    lda #0        ; Silence the channel
+    sta $900d
+    rts
 
 fast_print:
     ; Prints direct to screen without using kernal routine
@@ -236,8 +255,9 @@ read_keys:
 key_up_handler:
     +draw_tile 0, -1, 255, 255, 0
     lda tile_value
-    cmp #11
+    cmp #12
     bcs .blocked_up
+    jsr sound_footstep
     dec player_y
 .blocked_up:
     rts
@@ -245,8 +265,9 @@ key_up_handler:
 key_down_handler:
     +draw_tile 0, 1, 255, 255, 0
     lda tile_value
-    cmp #11
+    cmp #12
     bcs .blocked_down
+    jsr sound_footstep
     inc player_y
 .blocked_down:
     rts
@@ -254,8 +275,9 @@ key_down_handler:
 key_left_handler:
     +draw_tile -1, 0, 255, 255, 0
     lda tile_value
-    cmp #11
+    cmp #12
     bcs .blocked_left
+    jsr sound_footstep
     dec player_x
 .blocked_left:
     rts
@@ -263,8 +285,9 @@ key_left_handler:
 key_right_handler:
     +draw_tile 1, 0, 255, 255, 0
     lda tile_value
-    cmp #11
+    cmp #12
     bcs .blocked_right
+    jsr sound_footstep
     inc player_x
 .blocked_right:
     rts
@@ -286,6 +309,14 @@ draw_dungeon:
     +draw_tile -2,  0,  9, 12, 3  ; row 3 (player row)
     +draw_tile -1,  0, 10, 12, 4
     ; player at 11, 12
+    ; Draw the hero
+    lda #3
+    sta temp_colour
+    lda #62              ; Print the hero
+    ldx #12              ;
+    ldy #11              ;
+    jsr fast_print
+    ;
     +draw_tile  1,  0, 12, 12, 4
     +draw_tile  2,  0, 13, 12, 3 
 
@@ -313,6 +344,9 @@ draw_dungeon:
 ; CODE ENTRY POINT
 
 init:
+
+    lda #15      ; Set volume to maximum (0-15)
+    sta $900e
 
     lda #$93
     jsr $ffd2    ; cls
@@ -345,12 +379,12 @@ game_loop:
     jsr draw_dungeon
 
     ; Draw the hero after everything else is on screen
-    lda #3
-    sta temp_colour
-    lda #62              ; Print the hero
-    ldx #12              ;
-    ldy #11              ;
-    jsr fast_print
+ ;   lda #3
+ ;   sta temp_colour
+ ;   lda #62              ; Print the hero
+ ;   ldx #12              ;
+ ;   ldy #11              ;
+ ;   jsr fast_print
 
     jmp game_loop
 
