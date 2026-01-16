@@ -11,7 +11,6 @@
 ;       for the unexpanded Vic20
 ;               by johhn
 
-
 * = $1001
 
 ; -----------------------------------------------
@@ -25,7 +24,6 @@
 ; STATIC DATA - Keep in low RAM area
 
 !source "dungeonmap.asm"
-
 
 ;------------------------------------------------
 ; Zero page vars
@@ -42,13 +40,6 @@ temp_colour_hi  = $09
 
 row_lo = $fb
 row_hi = $fc
-
-
-;------------------------------------------------
-; Buffers
-
-;tile_char !byte 0,0
-
 
 ;------------------------------------------------
 ; MACROS - to be replaced
@@ -111,8 +102,9 @@ row_hi = $fc
 }
 
 ; ------------------------------------------
-; Generate lookup tables to save on the fly computation
-; Will revert to on the fly if I run out of RAM for this
+; LOOKUP TABLES
+; Save on the fly computation
+; Will revert to on the fly if I run out of RAM 
 
 row_table_lo:
 !for i, 0, 31 {
@@ -286,9 +278,8 @@ draw_dungeon:
 
     rts
 
-
 ;------------------------------------------------
-; CODE ENTRY
+; CODE ENTRY POINT
 
 init:
 
@@ -313,7 +304,6 @@ game_loop:
     jsr read_keys
     jsr draw_dungeon
     jmp game_loop
-
 
 
 ;Black	144	$90	CTRL + 1
