@@ -11,6 +11,11 @@
 ;       for the unexpanded Vic20
 ;               by johhn
 
+;------------------------------------------------
+; Get the high code loaded in first before
+; coming back to start of RAM
+!source "charset.asm"
+
 * = $1001
 
 ; -----------------------------------------------
@@ -80,9 +85,16 @@ row_hi = $fc
     lsr
 .got_tile:
     sta tile_value
-    clc
-    adc #$30             ; Convert 0-9 to PETSCII '0'-'9'
-    sta tile_char        ; We only need the first byte now
+
+    ; --- New Lookup Table Logic ---
+    tax                  ; Move tile value (0-15) into X
+    lda tile_to_char, x  ; Get actual PETSCII character from table
+    sta tile_char        ; Store it for printing
+    ; ------------------------------
+
+    ;clc
+    ;adc #$30             ; Convert 0-9 to PETSCII '0'-'9'
+    ;sta tile_char        ; We only need the first byte now
 
     ; 3. Prepare for Subroutine
     ; If scrx > 30, we just wanted the tile_value, so skip printing
@@ -103,9 +115,9 @@ row_hi = $fc
 
 ; ------------------------------------------
 ; LOOKUP TABLES
+
 ; Save on the fly computation
 ; Will revert to on the fly if I run out of RAM 
-
 row_table_lo:
 !for i, 0, 31 {
     !byte <(dungeon + (i * 16))
@@ -127,6 +139,25 @@ screen_hi:
 !for i, 0, 22 {
     !byte >($1e00 + (i * 22))
 }
+
+; Map number to printable character table
+tile_to_char:
+    !byte 00   ;floor
+    !byte 00   ;gradd
+    !byte 00   ;lava
+    !byte 59   ;door unlocked
+    !byte 00   ;shallow water
+    !byte 00   ;hidden passage
+    !byte 54   ;fountain (health +1)
+    !byte 00   ;teleportation (goes somewhere random)
+    !byte 00   ;key (changes to 0 once touched, keys + 1)
+    !byte 00   ;Petr / Petra (randomly chosen) - game won if touched
+    !byte 00   ;Time spell (adds 20 seconds to time)
+    !byte 61   ;wall
+    !byte 60   ;locked Door (Changes to 3 if touched with a key)
+    !byte 00   ;deep water
+    !byte 00   ;monster
+    !byte 00   ;blank
 
 ;------------------------------------------------
 ; SUBROUTINES
@@ -286,6 +317,15 @@ init:
     lda #$93
     jsr $ffd2    ; cls
 
+    ; -----------------------------------------------
+    ; Set VIC char base to $1C00 (block 3) for custom charset
+    ; stored in charset.asm
+
+    lda $9005
+    and #%11110000           ; clear bits 1-4
+    ora #%00001111           ; set bits 1-4 > $1c00
+    sta $9005
+
     ldx #$08
     stx $900f    ; borders to black
 
@@ -303,6 +343,15 @@ game_loop:
 
     jsr read_keys
     jsr draw_dungeon
+
+    ; Draw the hero after everything else is on screen
+    lda #3
+    sta temp_colour
+    lda #62              ; Print the hero
+    ldx #12              ;
+    ldy #11              ;
+    jsr fast_print
+
     jmp game_loop
 
 
