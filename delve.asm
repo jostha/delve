@@ -30,6 +30,20 @@
 
 !source "dungeonmap.asm"
 
+; The fountain in the charset is animated by altering
+; the first four bytes of the char
+anim_fountain_water1
+    !byte %00000000
+    !byte %00100010
+    !byte %00001001
+    !byte %01001000
+
+anim_fountain_water2
+    !byte %00010100
+    !byte %00001001
+    !byte %01000000
+    !byte %00001000
+
 ;------------------------------------------------
 ; Zero page vars
 ; Stick to $00 to $0F or $45 to $50 range for safety
@@ -41,7 +55,9 @@ tile_value   = $06
 tile_char    = $07
 
 temp_colour     = $08        
-temp_colour_hi  = $09        
+temp_colour_hi  = $09
+
+anim_timer   = $0a
 
 row_lo = $fb
 row_hi = $fc
@@ -180,6 +196,35 @@ sound_footstep:
     lda #0        ; Silence the channel
     sta $900d
     rts
+
+animations:
+    ; fountain
+    lda anim_timer
+    eor #$01            ; Flip the bit (0 becomes 1, 1 becomes 0)
+    sta anim_timer
+
+    beq .do_frame_2     ; If the result was 0, do frame 2
+
+.do_frame_1:
+    ldx #3
+.copy_loop1:
+    lda anim_fountain_water1,x       ; Load byte from source + X
+    sta fountain,x      ; Store byte in destination + X
+    dex                 ; Decrement counter
+    bpl .copy_loop1     ; If not 0, loop back
+    jmp .anim_done
+
+.do_frame_2:
+    ldx #3          ; Start counter at 3
+.copy_loop2:
+    lda anim_fountain_water2,x       ; Load byte from source + X
+    sta fountain,x      ; Store byte in destination + X
+    dex             ; Decrement counter
+    bpl .copy_loop2 ; If not, loop back
+
+.anim_done:
+    rts
+
 
 fast_print:
     ; Prints direct to screen without using kernal routine
@@ -377,14 +422,7 @@ game_loop:
 
     jsr read_keys
     jsr draw_dungeon
-
-    ; Draw the hero after everything else is on screen
- ;   lda #3
- ;   sta temp_colour
- ;   lda #62              ; Print the hero
- ;   ldx #12              ;
- ;   ldy #11              ;
- ;   jsr fast_print
+    jsr animations
 
     jmp game_loop
 
