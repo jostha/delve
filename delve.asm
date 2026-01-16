@@ -76,7 +76,7 @@ row_hi = $fc
     adc #dy
     sta target_y
 
-    ; 2. Lookup Map Data (using your existing map table logic)
+    ; 2. Lookup Map Data (using existing map table logic)
     ldy target_y
     lda row_table_lo, y
     sta row_lo
@@ -107,10 +107,6 @@ row_hi = $fc
     lda tile_to_char, x  ; Get actual PETSCII character from table
     sta tile_char        ; Store it for printing
     ; ------------------------------
-
-    ;clc
-    ;adc #$30             ; Convert 0-9 to PETSCII '0'-'9'
-    ;sta tile_char        ; We only need the first byte now
 
     ; 3. Prepare for Subroutine
     ; If scrx > 30, we just wanted the tile_value, so skip printing
@@ -159,7 +155,7 @@ screen_hi:
 ; Map number to printable character table
 tile_to_char:
     !byte 00   ;floor
-    !byte 00   ;gradd
+    !byte 00   ;grass
     !byte 00   ;lava
     !byte 59   ;door unlocked
     !byte 00   ;shallow water
@@ -179,7 +175,7 @@ tile_to_char:
 ; SUBROUTINES
 
 sound_footstep:
-   ldx #$fe      ; Starting "pitch" for noise (high-ish)
+    ldx #$fe      ; Starting "pitch" for noise (high-ish)
 .loop:
     stx $900d     ; Write to noise channel
 
@@ -209,18 +205,18 @@ animations:
     ldx #3
 .copy_loop1:
     lda anim_fountain_water1,x       ; Load byte from source + X
-    sta fountain,x      ; Store byte in destination + X
-    dex                 ; Decrement counter
-    bpl .copy_loop1     ; If not 0, loop back
+    sta fountain,x                   ; Store byte in destination + X
+    dex                              ; Decrement counter
+    bpl .copy_loop1                  ; If not 0, loop back
     jmp .anim_done
 
 .do_frame_2:
-    ldx #3          ; Start counter at 3
+    ldx #3                           ; Start counter at 3
 .copy_loop2:
     lda anim_fountain_water2,x       ; Load byte from source + X
-    sta fountain,x      ; Store byte in destination + X
-    dex             ; Decrement counter
-    bpl .copy_loop2 ; If not, loop back
+    sta fountain,x                   ; Store byte in destination + X
+    dex                              ; Decrement counter
+    bpl .copy_loop2                  ; If not, loop back
 
 .anim_done:
     rts
@@ -378,10 +374,10 @@ draw_dungeon:
     +draw_tile  2,  2, 13, 14, 7
 
     ; Test compass one at a time - comment out the crashing ones
-    ;+draw_tile  0, -3, 11,  9, 5  ; North
-    ;+draw_tile  0,  3, 11, 15, 5  ; South (works)
-    ;+draw_tile -3,  0,  8, 12, 5  ; West
-    ;+draw_tile  3,  0, 14, 12, 5  ; East
+;    +draw_tile  0, -3, 11,  9, 5  ; North
+;;    +draw_tile  0,  3, 11, 15, 5  ; South (works)
+;    +draw_tile -3,  0,  8, 12, 5  ; West
+ ;   +draw_tile  3,  0, 14, 12, 5  ; East
 
     rts
 
@@ -427,11 +423,11 @@ game_loop:
     jmp game_loop
 
 
-;Black	144	$90	CTRL + 1
-;White	5	$05	CTRL + 2
-;Red	28	$1C	CTRL + 3
-;Cyan	159	$9F	CTRL + 4
-;Purple	156	$9C	CTRL + 5
-;Green	30	$1E	CTRL + 6
-;Blue	31	$1F	CTRL + 7
-;Yellow	158	$9E	CTRL + 8
+;Black	144	$90	CTRL + 1 (0)
+;White	5	$05	CTRL + 2 (1)
+;Red	28	$1C	CTRL + 3 (2)
+;Cyan	159	$9F	CTRL + 4 (3)
+;Purple	156	$9C	CTRL + 5 (4)
+;Green	30	$1E	CTRL + 6 (5)
+;Blue	31	$1F	CTRL + 7 (6)
+;Yellow	158	$9E	CTRL + 8 (7)

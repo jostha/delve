@@ -10,5 +10,5 @@
     ░       ░  ░    ░  ░   ░     ░  ░
    ░                       ░ 
      
-     a 6502 dungeon crawler for Vic 20
+a 6502 dungeon crawler for the Vic 20
 ```
