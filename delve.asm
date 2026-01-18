@@ -47,82 +47,36 @@ anim_fountain_water2
 ;------------------------------------------------
 ; Zero page vars
 ; Stick to $00 to $0F or $45 to $50 range for safety
-player_x     = $02
-player_y     = $03
-target_x     = $04
-target_y     = $05
-tile_value   = $06
-tile_char    = $07
+player_x        = $02
+player_y        = $03
+target_x        = $04
+target_y        = $05
+tile_value      = $06
+tile_char       = $07
 
 temp_colour     = $08        
 temp_colour_hi  = $09
 
-anim_timer   = $0a
+anim_timer      = $0a
+temp_px         = $0b
+temp_py         = $0c
 
 row_lo = $fb
 row_hi = $fc
 
 ;------------------------------------------------
-; MACROS - to be replaced
+; MACROS - to be replaced or shrunken
 
 !macro draw_tile dx, dy, scrx, scry, tile_colour {
-    ; 1. Calculate Map Coordinates
-    lda player_x
-    clc
-    adc #dx
-    sta target_x
-    lda player_y
-    clc
-    adc #dy
-    sta target_y
+    lda #scrx
+    sta temp_px
+    lda #scry
+    sta temp_py
 
-    ; 2. Lookup Map Data (using existing map table logic)
-    ldy target_y
-    lda row_table_lo, y
-    sta row_lo
-    lda row_table_hi, y
-    sta row_hi
-
-    lda target_x
-    lsr
-    tay                  ; Y is index into map byte (x/2)
-    lda target_x
-    and #1
-    beq .get_high
-
-    lda (row_lo), y      ; Get low nibble
-    and #$0f
-    jmp .got_tile
-.get_high:
-    lda (row_lo), y      ; Get high nibble
-    lsr
-    lsr
-    lsr
-    lsr
-.got_tile:
-    sta tile_value
-
-    ; --- New Lookup Table Logic ---
-    tax                  ; Move tile value (0-15) into X
-    lda tile_to_char, x  ; Get actual PETSCII character from table
-    sta tile_char        ; Store it for printing
-    ; ------------------------------
-
-    ; 3. Prepare for Subroutine
-    ; If scrx > 30, we just wanted the tile_value, so skip printing
-    ldx #scrx
-    cpx #31
-    bcs .skip_print
-
-    lda #tile_colour
-    sta temp_colour
-    
-    lda tile_char        ; Restore character to A
-    ldx #scry            ; X = Row
-    ldy #scrx            ; Y = Column
-    jsr fast_print
-
-.skip_print:
+    lda #dx              ; A = dx
+    ldx #dy              ; X = dy
+    ldy #tile_colour     ; Y = color
+    jsr draw_tile_sub
 }
 
 ; ------------------------------------------
@@ -219,6 +173,73 @@ animations:
     bpl .copy_loop2                  ; If not, loop back
 
 .anim_done:
+    rts
+
+
+draw_tile_sub:
+    ; Moved inner workings of draw_tile macro here to save RAM
+    ;     A=dx
+    ;     X=dy
+    ;     Y=color
+    ;     temp_px=scrx
+    ;     temp_py=scry
+
+    sty temp_colour      ; Save color
+    pha                  ; Save dx
+
+    ; 1. Calculate Map Coordinates
+    clc
+    adc player_x
+    sta target_x
+    txa                  ; dy to A
+    clc
+    adc player_y
+    sta target_y
+
+    ; 2. Lookup Map Data
+    ldy target_y
+    lda row_table_lo, y
+    sta row_lo
+    lda row_table_hi, y
+    sta row_hi
+
+    lda target_x
+    lsr
+    tay                  ; Index = X/2
+    lda target_x         ; Check coordinate first
+    and #1
+    beq .extract_high
+
+.extract_low:
+    lda (row_lo), y      ; Now load the byte
+    and #$0f             ; Mask for low nibble
+    jmp .got_tile
+
+.extract_high:
+    lda (row_lo), y      ; Now load the byte
+    lsr : lsr : lsr : lsr ; Shift for high nibble
+
+.got_tile:
+    sta tile_value
+
+    ; 3. Character Lookup
+    tax
+    lda tile_to_char, x
+    sta tile_char
+
+    ; 4. Check if we should print
+    lda temp_px
+    cmp #31              ; If scrx > 30, skip printing
+    bcs .draw_tile_sub_done
+
+    ; 5. Call fast_print
+    lda tile_char        ; Character
+    ldx temp_py          ; Row
+    ldy temp_px          ; Column
+    jsr fast_print
+
+.draw_tile_sub_done:
+    pla                  ; Restore dx (clean stack)
     rts
 
 
